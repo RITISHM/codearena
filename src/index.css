@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #0d1117;
+  --color-dark-panel: #161b22;
+  --color-dark-border: #30363d;
+  --color-primary: #58a6ff;
+  --color-primary-glow: rgba(88, 166, 255, 0.4);
+  --color-secondary: #8b949e;
+  --color-danger: #f85149;
+  --color-danger-glow: rgba(248, 81, 73, 0.4);
+  --color-success: #2ea043;
+  --color-success-glow: rgba(46, 160, 67, 0.4);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-gray-200 font-sans antialiased overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  .glow-primary {
+    box-shadow: 0 0 15px var(--color-primary-glow);
+  }
+
+  .glow-danger {
+    box-shadow: 0 0 15px var(--color-danger-glow);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 15px var(--color-success-glow);
+  }
+
+  .glass-panel {
+    @apply bg-dark-panel/80 backdrop-blur-md border border-dark-border;
+  }
+
+  /* Custom Scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-secondary;
+  }
+}

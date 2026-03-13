@@ -13,12 +13,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
+    <AuthProvider> {/*this will wrap the etire application and provide the aut data to entire app*/}
+      <BrowserRouter> {/*this enable the react router and all the routes will be managed in this*/}
+        <Routes> {/*this will contains all the routes*/}
+          <Route path="/" element={<Layout />}>{/*this is the absloute path of the page*/}
             {/* Public Routes */}
-            <Route index element={<Landing />} />
+            <Route index element={<Landing />} />{/*due to index this page will render as default when absolute is called*/}
             <Route path="login" element={<Auth />} />
             <Route path="signup" element={<Auth />} />
 

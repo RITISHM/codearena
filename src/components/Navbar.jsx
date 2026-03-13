@@ -8,7 +8,7 @@ export default function Navbar() {
     const location = useLocation();
     const { user, logout } = useAuth();
 
-    const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/';
+    const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' ;
 
     if (isAuthPage) return null; // Don't show navbar on auth screens or landing page
 
@@ -45,6 +45,22 @@ export default function Navbar() {
                         <Button variant="secondary" size="sm" onClick={logout}>
                             Sign Out
                         </Button>
+                    </div>
+                )}
+                {/*if user is not authenticated the this nav bar will be showed*/}
+                {!user && ( 
+                    <div className="flex items-center gap-4">
+                        <Link to="/leaderboard">
+                            <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
+                                <Trophy className="w-4 h-4" />
+                                Leaderboard
+                            </Button>
+                        </Link>
+                        <Link to="/login">
+                        <Button variant="secondary" size="sm" >
+                            Log in
+                        </Button></Link>
+                        
                     </div>
                 )}
             </div>

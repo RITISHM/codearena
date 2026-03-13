@@ -26,10 +26,7 @@ export default function Landing() {
                     transition={{ duration: 0.6 }}
                     className="max-w-4xl mt-10 md:mt-20"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-dark-panel border border-primary/30 text-primary text-sm font-medium mb-8 glow-primary">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
-                        Version 2.0 is now live
-                    </div>
+                  
 
                     <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
                         The Ultimate <br />

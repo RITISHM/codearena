@@ -1,9 +1,5 @@
-const mongoose = require("mongoose");
-
-mongoose
-  .connect("mongodb://127.0.0.1:27017/codearena")
-  .then(() => console.log("User db is connected"))
-  .catch((err) => console.log(err));
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true },
@@ -14,6 +10,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
+  password: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   dob: { type: Date },
@@ -25,4 +22,15 @@ const userSchema = new mongoose.Schema({
   level: { type: String, enum: ["beginner", "intermediate", "advanced"] },
 });
 
-module.exports = mongoose.model("User", userSchema);
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.verifyPassword = async function (password) {
+  return bcrypt.compare(password, this.password);
+};
+
+export default mongoose.model("User", userSchema);

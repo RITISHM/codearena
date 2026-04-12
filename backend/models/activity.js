@@ -1,9 +1,4 @@
-const mongoose = require("mongoose");
-
-mongoose
-  .connect("mongodb://127.0.0.1:27017/codearena")
-  .then(() => console.log("activity db is connected"))
-  .catch((err) => console.log(err));
+import mongoose from "mongoose";
 
 const activitySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -13,4 +8,4 @@ const activitySchema = new mongoose.Schema({
 
 activitySchema.index({ userId: 1 });
 
-module.exports = mongoose.model("Activity", activitySchema);
+export default mongoose.model("Activity", activitySchema);

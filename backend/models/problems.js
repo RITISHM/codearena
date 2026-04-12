@@ -1,9 +1,4 @@
-const mongoose = require("mongoose");
-
-mongoose
-  .connect("mongodb://127.0.0.1:27017/codearena")
-  .then(() => console.log("problem db is connected"))
-  .catch((err) => console.log(err));
+import mongoose from "mongoose";
 
 const problemSchema = new mongoose.Schema({
   topic: String,
@@ -27,4 +22,4 @@ const problemSchema = new mongoose.Schema({
   constraints: [{ type: String }],
 });
 
-module.exports = mongoose.model("Problem", problemSchema);
+export default mongoose.model("Problem", problemSchema);

@@ -1,9 +1,4 @@
-const mongoose = require("mongoose");
-
-mongoose
-  .connect("mongodb://127.0.0.1:27017/codearena")
-  .then(() => console.log("submission db conected"))
-  .catch((err) => console.log(err));
+import mongoose from "mongoose";
 
 const submissionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -36,4 +31,4 @@ submissionSchema.index({ matchId: 1, userId: 1 });
 
 submissionSchema.index({ matchId: 1, userId: 1, problemId: 1 });
 
-module.exports = mongoose.model("Submission", submissionSchema);
+export default mongoose.model("Submission", submissionSchema);

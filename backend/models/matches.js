@@ -1,8 +1,4 @@
-const mongoose = require("mongoose");
-mongoose
-  .connect("mongodb://127.0.0.1:27017/codearena")
-  .then(() => console.log("Matches db is connected"))
-  .catch((err) => console.log(err));
+import mongoose from "mongoose";
 
 const matchSchema = new mongoose.Schema({
   players: {
@@ -35,4 +31,4 @@ const matchSchema = new mongoose.Schema({
 
 matchSchema.index({ "players.player1": 1, "players.player2": 1 });
 
-module.exports = mongoose.model("Match", matchSchema);
+export default mongoose.model("Match", matchSchema);

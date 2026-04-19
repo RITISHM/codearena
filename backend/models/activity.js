@@ -6,6 +6,6 @@ const activitySchema = new mongoose.Schema({
   count: { type: Number, required: true },
 });
 
-activitySchema.index({ userId: 1 });
+activitySchema.index({ userId: 1, date: 1 });
 
 export default mongoose.model("Activity", activitySchema);

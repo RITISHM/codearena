@@ -3,8 +3,10 @@ import express from "express";
 import authRoutes from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import userRoutes from "./routes/user.routes.js";
 
 const app = express();
+
 await mongoose
   .connect(DB_URL)
   .then(() => console.log("db is connected ✅"))
@@ -15,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/auth", authRoutes);
-
+app.use("/user", userRoutes);
 app.get("/health", (req, res) => {
   res.json({
     status: "Healthy",

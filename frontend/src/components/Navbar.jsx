@@ -1,12 +1,18 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Code2, Trophy, User } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { user, logout } = useAuth();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/');
+    };
 
     const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' ;
 
@@ -42,7 +48,7 @@ export default function Navbar() {
                                 Profile
                             </Button>
                         </Link>
-                        <Button variant="secondary" size="sm" onClick={logout}>
+                        <Button variant="secondary" size="sm" onClick={handleLogout}>
                             Sign Out
                         </Button>
                     </div>

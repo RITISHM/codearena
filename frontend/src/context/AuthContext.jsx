@@ -8,83 +8,123 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const formatUser = (data) => ({
+        ...data,
+        id: data._id,
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        username: data.username || '',
+        email: data.email || '',
+        dob: data.dob,
+        winRate: data.matches ? `${Math.round((data.win / data.matches) * 100)}%` : '0%',
+        location: data.region || 'Earth',
+        joinDate: data.joined ? new Date(data.joined).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently'
+    });
+
     useEffect(() => {
-        // Check for existing session on mount
-        const sessionUser = localStorage.getItem('codearena_session');
-        if (sessionUser) {
-            setUser(JSON.parse(sessionUser));
-        }
-        setLoading(false);
+        const checkSession = async () => {
+            try {
+                const res = await fetch('/api/user/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(formatUser(data));
+                } else {
+                    setUser(null);
+                }
+            } catch (err) {
+                console.error("Session check failed", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkSession();
     }, []);
 
-    const login = (email, password) => {
-        const users = JSON.parse(localStorage.getItem('codearena_users') || '[]');
-        const existingUser = users.find(u => u.email === email && u.password === password);
+    const login = async (email, password) => {
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-        if (existingUser) {
-            // Remove password from session payload
-            const { password: _, ...sessionData } = existingUser;
-            localStorage.setItem('codearena_session', JSON.stringify(sessionData));
-            setUser(sessionData);
-            return { success: true };
+            const data = await res.json();
+            if (res.ok) {
+                const userRes = await fetch('/api/user/me');
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(formatUser(userData));
+                }
+                return { success: true };
+            }
+            return { success: false, error: data.error || 'Invalid credentials' };
+        } catch (err) {
+            return { success: false, error: 'Network error' };
         }
-        return { success: false, error: 'Invalid email or password' };
     };
 
-    const signup = (username, email, password) => {
-        const users = JSON.parse(localStorage.getItem('codearena_users') || '[]');
+    const signup = async (username, email, password, firstName, lastName, region, dob) => {
+        try {
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username, 
+                    email, 
+                    password, 
+                    firstName, 
+                    lastName,
+                    region,
+                    dob
+                })
+            });
 
-        if (users.some(u => u.email === email)) {
-            return { success: false, error: 'Email already exists' };
+            const data = await res.json();
+            if (res.ok) {
+                // The signup endpoint currently returns the user formatted in basic way.
+                // We fetch the full profile from /api/user/me after signup to be safe
+                const userRes = await fetch('/api/user/me');
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(formatUser(userData));
+                } else {
+                    setUser(formatUser(data.user));
+                }
+                return { success: true };
+            }
+            return { success: false, error: data.error || 'Signup failed' };
+        } catch (err) {
+            return { success: false, error: 'Network error' };
         }
-        if (users.some(u => u.username === username)) {
-            return { success: false, error: 'Username already taken' };
-        }
-
-        const newUser = {
-            id: Date.now().toString(),
-            username,
-            email,
-            password,
-            location: 'Earth',
-            github: '',
-            rating: 1200,
-            matches: 0,
-            winRate: '0%'
-        };
-
-        users.push(newUser);
-        localStorage.setItem('codearena_users', JSON.stringify(users));
-
-        // Auto-login after signup
-        const { password: _, ...sessionData } = newUser;
-        localStorage.setItem('codearena_session', JSON.stringify(sessionData));
-        setUser(sessionData);
-
-        return { success: true };
     };
 
-    const updateProfile = (updates) => {
+    const updateProfile = async (updates) => {
         if (!user) return { success: false, error: 'Not logged in' };
+        
+        try {
+            const res = await fetch('/api/user/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
 
-        const users = JSON.parse(localStorage.getItem('codearena_users') || '[]');
-        const userIndex = users.findIndex(u => u.id === user.id);
-
-        if (userIndex !== -1) {
-            const updatedUser = { ...users[userIndex], ...updates };
-            users[userIndex] = updatedUser;
-            localStorage.setItem('codearena_users', JSON.stringify(users));
-
-            const { password: _, ...sessionData } = updatedUser;
-            localStorage.setItem('codearena_session', JSON.stringify(sessionData));
-            setUser(sessionData);
-            return { success: true };
+            if (res.ok) {
+                const data = await res.json();
+                setUser(formatUser(data)); 
+                return { success: true };
+            }
+            return { success: false, error: 'Update failed' };
+        } catch (err) {
+            return { success: false, error: 'Network error' };
         }
-        return { success: false, error: 'User not found in database' };
     };
 
-    const logout = () => {
-        localStorage.removeItem('codearena_session');
+    const logout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (err) {
+            console.error(err);
+        }
         setUser(null);
     };
 

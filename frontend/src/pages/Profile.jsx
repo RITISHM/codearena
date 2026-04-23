@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { User, Activity, MapPin, Calendar, GitBranch, Edit2, Check, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { User, Activity, MapPin, Calendar, GitBranch, Edit2, Check, X, Mail, Trash2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 
+const COUNTRIES = [
+    "Australia", "Brazil", "Canada", "China", "France", "Germany", "India",
+    "Italy", "Japan", "Mexico", "Netherlands", "Russia", "Singapore",
+    "South Korea", "Spain", "Sweden", "Switzerland", "United Kingdom",
+    "United States", "Other"
+];
+
 export default function Profile() {
     const { username } = useParams();
-    const { user, updateProfile } = useAuth();
+    const navigate = useNavigate();
+    const { user, updateProfile, logout } = useAuth();
+    const [activities, setActivities] = useState([]);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
 
     // Check if viewing own profile
     const isOwnProfile = username === 'me' || (user && user.username === username);
     const displayUser = isOwnProfile && user ? user : {
         username: username !== 'me' ? username : 'Guest',
+        email: '',
+        firstName: '',
+        lastName: '',
         rating: 1200,
         winRate: '0%',
         matches: 0,
@@ -21,17 +38,84 @@ export default function Profile() {
         joinDate: 'Oct 2024'
     };
 
+    const currentYear = new Date().getFullYear();
+    const joinYear = displayUser.joinDate !== 'Recently' && displayUser.joinDate ? parseInt(displayUser.joinDate.split(' ')[1]) || currentYear : currentYear;
+    const availableYears = [];
+    for (let y = currentYear; y >= joinYear; y--) {
+        availableYears.push(y);
+    }
+
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState({
+        firstName: displayUser.firstName || '',
+        lastName: displayUser.lastName || '',
+        dob: displayUser.dob ? new Date(displayUser.dob).toISOString().split('T')[0] : '',
         location: displayUser.location || '',
         github: displayUser.github || ''
     });
 
+    useEffect(() => {
+        if (isEditing) {
+            setEditData({
+                firstName: displayUser.firstName || '',
+                lastName: displayUser.lastName || '',
+                dob: displayUser.dob ? new Date(displayUser.dob).toISOString().split('T')[0] : '',
+                location: displayUser.location || '',
+                github: displayUser.github || ''
+            });
+        }
+    }, [isEditing, displayUser]);
+// ... [fetching activity effect] ...
+    useEffect(() => {
+        if (isOwnProfile) {
+            const fetchActivity = async () => {
+                try {
+                    const res = await fetch(`/api/user/me/activity/${selectedYear}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setActivities(data);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch activity", err);
+                }
+            };
+            fetchActivity();
+        }
+    }, [isOwnProfile, selectedYear]);
+
     const handleSave = () => {
         if (isOwnProfile && updateProfile) {
-            updateProfile(editData);
+            updateProfile({
+                username: displayUser.username,
+                firstname: editData.firstName,
+                lastname: editData.lastName,
+                dob: editData.dob,
+                region: editData.location,
+                github: editData.github
+            });
         }
         setIsEditing(false);
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeleteError('');
+        try {
+            const res = await fetch('/api/user/me', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: deletePassword })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                await logout();
+                navigate('/');
+            } else {
+                setDeleteError(data.error || 'Failed to delete account');
+            }
+        } catch (err) {
+            setDeleteError('Network error');
+        }
     };
 
     return (
@@ -47,37 +131,56 @@ export default function Profile() {
                                 {displayUser.username.charAt(0).toUpperCase()}
                             </div>
                             <h1 className="text-2xl font-bold text-white mb-1 font-mono">{displayUser.username}</h1>
-                            <span className="text-gray-400 mb-6 px-3 py-1 bg-dark-bg rounded-full text-sm border border-dark-border">
-                                Master
+                            {displayUser.firstName && <span className="text-gray-400 text-sm block mb-2">{displayUser.firstName} {displayUser.lastName}</span>}
+                            <span className="text-gray-400 mb-6 px-3 py-1 bg-dark-bg rounded-full text-sm border border-dark-border capitalize">
+                                {displayUser.level || 'beginner'}
                             </span>
 
-                            <div className="w-full space-y-3 text-left">
+                            <div className="w-full space-y-3 text-left w-full mt-4">
                                 {isEditing ? (
+                                    // ... [existing edit mode code] ...
                                     <div className="space-y-3 border border-primary/30 bg-primary/5 p-4 rounded-xl">
-                                        <div>
-                                            <label className="text-xs text-primary mb-1 block">Location</label>
-                                            <div className="flex items-center gap-2 bg-dark-bg p-2 rounded border border-dark-border">
-                                                <MapPin className="w-4 h-4 text-gray-500" />
-                                                <input
-                                                    type="text"
-                                                    value={editData.location}
-                                                    onChange={e => setEditData({ ...editData, location: e.target.value })}
-                                                    className="bg-transparent text-sm text-white w-full focus:outline-none"
-                                                    placeholder="City, Country"
-                                                />
+                                        <div className="opacity-50 space-y-1">
+                                            <label className="text-[10px] uppercase tracking-wider text-gray-500 block">Username (Locked)</label>
+                                            <input type="text" value={displayUser.username} readOnly className="bg-transparent text-sm text-gray-400 w-full focus:outline-none" />
+                                        </div>
+                                        <div className="opacity-50 space-y-1">
+                                            <label className="text-[10px] uppercase tracking-wider text-gray-500 block">Email (Locked)</label>
+                                            <input type="email" value={displayUser.email} readOnly className="bg-transparent text-sm text-gray-400 w-full focus:outline-none" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="text-[10px] uppercase tracking-wider text-primary mb-1 block">First Name</label>
+                                                <input type="text" value={editData.firstName} onChange={e => setEditData({...editData, firstName: e.target.value})} className="bg-dark-bg border border-dark-border p-2 rounded text-sm text-white w-full focus:ring-1 focus:ring-primary outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] uppercase tracking-wider text-primary mb-1 block">Last Name</label>
+                                                <input type="text" value={editData.lastName} onChange={e => setEditData({...editData, lastName: e.target.value})} className="bg-dark-bg border border-dark-border p-2 rounded text-sm text-white w-full focus:ring-1 focus:ring-primary outline-none" />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-xs text-primary mb-1 block">GitHub Handle</label>
+                                            <label className="text-[10px] uppercase tracking-wider text-primary mb-1 block">Date of Birth</label>
+                                            <input type="date" value={editData.dob} onChange={e => setEditData({...editData, dob: e.target.value})} className="bg-dark-bg border border-dark-border p-2 rounded text-sm text-white w-full focus:ring-1 focus:ring-primary outline-none [&::-webkit-calendar-picker-indicator]:invert" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase tracking-wider text-primary mb-1 block">Location / Region</label>
+                                            <div className="flex items-center gap-2 bg-dark-bg p-2 rounded border border-dark-border">
+                                                <MapPin className="w-4 h-4 text-gray-500" />
+                                                <select 
+                                                    value={editData.location} 
+                                                    onChange={e => setEditData({ ...editData, location: e.target.value })} 
+                                                    className="bg-transparent text-sm text-white w-full focus:outline-none cursor-pointer"
+                                                >
+                                                    <option value="" disabled>Select Country</option>
+                                                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase tracking-wider text-primary mb-1 block">GitHub Handle</label>
                                             <div className="flex items-center gap-2 bg-dark-bg p-2 rounded border border-dark-border">
                                                 <GitBranch className="w-4 h-4 text-gray-500" />
-                                                <input
-                                                    type="text"
-                                                    value={editData.github}
-                                                    onChange={e => setEditData({ ...editData, github: e.target.value })}
-                                                    className="bg-transparent text-sm text-white w-full focus:outline-none"
-                                                    placeholder="username"
-                                                />
+                                                <input type="text" value={editData.github} onChange={e => setEditData({ ...editData, github: e.target.value })} className="bg-transparent text-sm text-white w-full focus:outline-none" placeholder="username" />
                                             </div>
                                         </div>
                                         <div className="flex gap-2 pt-2">
@@ -92,26 +195,42 @@ export default function Profile() {
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-3 text-gray-300">
-                                            <MapPin className="w-5 h-5 text-gray-500" />
-                                            <span>{displayUser.location || 'Unknown'}</span>
+                                            <Mail className="w-5 h-5 text-gray-500 shrink-0" />
+                                            <span className="truncate">{displayUser.email || 'No email provided'}</span>
+                                        </div>
+                                        {displayUser.dob && (
+                                            <div className="flex items-center gap-3 text-gray-300">
+                                                <User className="w-5 h-5 text-gray-500 shrink-0" />
+                                                <span>Born {new Date(displayUser.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-3 text-gray-300">
+                                            <MapPin className="w-5 h-5 text-gray-500 shrink-0" />
+                                            <span>{displayUser.location || 'Unknown location'}</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-gray-300">
-                                            <Calendar className="w-5 h-5 text-gray-500" />
+                                            <Calendar className="w-5 h-5 text-gray-500 shrink-0" />
                                             <span>Joined {displayUser.joinDate || 'Recently'}</span>
                                         </div>
                                         {displayUser.github && (
                                             <div className="flex items-center gap-3 text-gray-300">
-                                                <GitBranch className="w-5 h-5 text-gray-500" />
-                                                <a href={`https://github.com/${displayUser.github}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
+                                                <GitBranch className="w-5 h-5 text-gray-500 shrink-0" />
+                                                <a href={`https://github.com/${displayUser.github}`} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors truncate">
                                                     github.com/{displayUser.github}
                                                 </a>
                                             </div>
                                         )}
                                         {isOwnProfile && (
-                                            <Button variant="secondary" size="sm" className="w-full mt-4" onClick={() => setIsEditing(true)}>
-                                                <Edit2 className="w-4 h-4 mr-2" />
-                                                Edit Profile
-                                            </Button>
+                                            <div className="pt-2 space-y-2">
+                                                <Button variant="secondary" size="sm" className="w-full" onClick={() => setIsEditing(true)}>
+                                                    <Edit2 className="w-4 h-4 mr-2" />
+                                                    Edit Profile
+                                                </Button>
+                                                <Button variant="danger" size="sm" className="w-full bg-red-900/30 text-red-500 hover:bg-red-900/50 border border-red-900/50" onClick={() => setIsDeleteModalOpen(true)}>
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete Account
+                                                </Button>
+                                            </div>
                                         )}
                                     </>
                                 )}
@@ -130,40 +249,139 @@ export default function Profile() {
                     <div className="grid grid-cols-3 gap-4">
                         <Card className="p-6 text-center border-t-4 border-t-primary">
                             <span className="block text-gray-400 text-sm uppercase mb-2">Rating</span>
-                            <span className="block text-4xl font-bold text-white">{displayUser.rating}</span>
+                            <span className="block text-4xl font-bold text-white">{displayUser.rating || 1200}</span>
                         </Card>
                         <Card className="p-6 text-center border-t-4 border-t-success">
                             <span className="block text-gray-400 text-sm uppercase mb-2">Win Rate</span>
-                            <span className="block text-4xl font-bold text-success">{displayUser.winRate}</span>
+                            <span className="block text-4xl font-bold text-success">{displayUser.winRate || '0%'}</span>
                         </Card>
                         <Card className="p-6 text-center border-t-4 border-t-secondary">
                             <span className="block text-gray-400 text-sm uppercase mb-2">Matches</span>
-                            <span className="block text-4xl font-bold text-white">{displayUser.matches}</span>
+                            <span className="block text-4xl font-bold text-white">{displayUser.matches || 0}</span>
                         </Card>
                     </div>
 
                     <Card className="p-6 mt-8">
-                        <h3 className="text-lg font-bold text-white mb-6">Recent Activity heatmap</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {Array.from({ length: 60 }).map((_, i) => {
-                                const active = Math.random();
-                                let colorClass = 'bg-dark-bg border-dark-border';
-                                if (active > 0.8) colorClass = 'bg-primary border-primary glow-primary';
-                                else if (active > 0.5) colorClass = 'bg-primary/50 border-primary/50';
-                                else if (active > 0.2) colorClass = 'bg-primary/20 border-primary/20';
+                        <div className="flex flex-wrap gap-4 justify-between items-end mb-6 text-gray-400 text-sm">
+                            <div className="flex items-center gap-2 text-white">
+                                <span className="text-2xl font-bold">{activities.length}</span>
+                                <span className="text-gray-400 mt-1">activities in {selectedYear}</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="hidden sm:inline">Total active days: <span className="text-white font-bold">{new Set(activities.map(a => new Date(a.date).toDateString())).size}</span></span>
+                                <select 
+                                    value={selectedYear} 
+                                    onChange={e => setSelectedYear(parseInt(e.target.value))}
+                                    className="bg-dark-bg border border-dark-border text-white text-sm rounded-md px-3 py-1.5 focus:outline-none focus:border-primary font-mono cursor-pointer"
+                                >
+                                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            </div>
+                        </div>
 
-                                return (
-                                    <div
-                                        key={i}
-                                        className={`w-5 h-5 rounded-sm border ${colorClass} transition-all hover:scale-125 hover:z-10`}
-                                        title="Activity"
-                                    />
-                                );
-                            })}
+                        <div className="overflow-x-auto pb-4 custom-scrollbar">
+                            <div className="flex gap-[10px] w-max">
+                                {(() => {
+                                    const year = selectedYear;
+                                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    const activitySet = new Set(activities.map(a => new Date(a.date).toDateString()));
+
+                                    return Array.from({ length: 12 }).map((_, m) => {
+                                        const startDay = new Date(year, m, 1).getDay();
+                                        const daysInMonth = new Date(year, m + 1, 0).getDate();
+                                        const monthCells = [];
+                                        
+                                        // Padding for start of month
+                                        for (let i = 0; i < startDay; i++) monthCells.push(null);
+                                        // Days in month
+                                        for (let i = 1; i <= daysInMonth; i++) monthCells.push(new Date(year, m, i));
+
+                                        return (
+                                            <div key={m} className="flex flex-col gap-2">
+                                                <div 
+                                                    className="grid gap-[4px]"
+                                                    style={{ 
+                                                        gridTemplateRows: 'repeat(7, 1fr)', 
+                                                        gridAutoFlow: 'column'
+                                                    }}
+                                                >
+                                                    {monthCells.map((date, i) => {
+                                                        if (!date) return <div key={`empty-${i}`} className="w-[14px] h-[14px] rounded-[3px]" />;
+                                                        
+                                                        const isActive = activitySet.has(date.toDateString());
+                                                        const cellClass = isActive 
+                                                            ? 'bg-[#2cbb5d]' // LeetCode green
+                                                            : 'bg-[#2d2d2d] hover:bg-[#3d3d3d]'; // LeetCode empty block
+
+                                                        return (
+                                                            <div
+                                                                key={i}
+                                                                className={`w-[14px] h-[14px] rounded-[3px] transition-colors ${cellClass}`}
+                                                                title={`${isActive ? 'Active' : 'No Activity'} on ${date.toLocaleDateString()}`}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                                <span className="text-xs text-gray-400 text-center">{monthNames[m]}</span>
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
                         </div>
                     </Card>
                 </div>
             </div>
+
+            {/* Delete Account Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-dark-panel border border-dark-border p-6 rounded-xl w-full max-w-sm shadow-2xl">
+                        <h3 className="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                            <Trash2 className="w-5 h-5" /> Delete Account
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-4">
+                            This action is permanent and cannot be undone. All your match history and data will be lost. Please enter your password to confirm.
+                        </p>
+                        
+                        {deleteError && (
+                            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-2 rounded mb-4">
+                                {deleteError}
+                            </div>
+                        )}
+
+                        <div className="mb-6">
+                            <input 
+                                type="password" 
+                                placeholder="Enter password" 
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                className="w-full bg-dark-bg border border-dark-border p-2.5 rounded text-sm text-white focus:ring-1 focus:ring-red-500 outline-none"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button 
+                                className="flex-1 bg-dark-bg hover:bg-gray-800 border border-dark-border" 
+                                onClick={() => {
+                                    setIsDeleteModalOpen(false);
+                                    setDeletePassword('');
+                                    setDeleteError('');
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white border-0" 
+                                onClick={handleDeleteAccount}
+                                disabled={!deletePassword}
+                            >
+                                Confirm
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

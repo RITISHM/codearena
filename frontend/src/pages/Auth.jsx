@@ -6,9 +6,16 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 
+const COUNTRIES = [
+    "Australia", "Brazil", "Canada", "China", "France", "Germany", "India",
+    "Italy", "Japan", "Mexico", "Netherlands", "Russia", "Singapore",
+    "South Korea", "Spain", "Sweden", "Switzerland", "United Kingdom",
+    "United States", "Other"
+];
+
 export default function Auth() {
     const [isLogin, setIsLogin] = useState(true);
-    const [formData, setFormData] = useState({ username: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ username: '', email: '', password: '', firstName: '', lastName: '', region: '', dob: '' });
     const [error, setError] = useState('');
 
     const navigate = useNavigate();
@@ -27,15 +34,15 @@ export default function Auth() {
         if (location.pathname === '/signup') setIsLogin(false);
     }, [location]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
         let res;
         if (isLogin) {
-            res = login(formData.email, formData.password);
+            res = await login(formData.email, formData.password);
         } else {
-            res = signup(formData.username, formData.email, formData.password);
+            res = await signup(formData.username, formData.email, formData.password, formData.firstName, formData.lastName, formData.region, formData.dob);
         }
 
         if (res.success) {
@@ -113,18 +120,72 @@ export default function Auth() {
                             )}
 
                             {!isLogin && (
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-gray-300">Username</label>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        value={formData.username}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-gray-600"
-                                        placeholder="dev_ninja"
-                                    />
-                                </div>
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-300">First Name</label>
+                                            <input
+                                                type="text"
+                                                name="firstName"
+                                                value={formData.firstName}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-gray-600"
+                                                placeholder="John"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-300">Last Name</label>
+                                            <input
+                                                type="text"
+                                                name="lastName"
+                                                value={formData.lastName}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-gray-600"
+                                                placeholder="Doe"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-300">Region</label>
+                                            <select
+                                                name="region"
+                                                value={formData.region}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all cursor-pointer"
+                                            >
+                                                <option value="" disabled>Select Country</option>
+                                                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-gray-300">Date of Birth</label>
+                                            <input
+                                                type="date"
+                                                name="dob"
+                                                value={formData.dob}
+                                                onChange={handleChange}
+                                                required
+                                                className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-gray-600"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-medium text-gray-300">Username</label>
+                                        <input
+                                            type="text"
+                                            name="username"
+                                            value={formData.username}
+                                            onChange={handleChange}
+                                            required
+                                            className="w-full px-4 py-2.5 bg-dark-bg border border-dark-border rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-gray-600"
+                                            placeholder="dev_ninja"
+                                        />
+                                    </div>
+                                </>
                             )}
 
                             <div className="space-y-1.5">

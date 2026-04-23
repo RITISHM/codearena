@@ -24,7 +24,8 @@ const updateUserById = async (Userid, data) => {
 };
 
 const deleteUser = async (Userid, password) => {
-  if (!(await User.findById(userid).verifyPassword(password))) throw new error("invalidPassword");
+
+  if (!(await User.findById(Userid).then(user => user.verifyPassword(password)))) throw new Error("invalidPassword");
 
   const user = await User.findByIdAndDelete(Userid);
   return user;

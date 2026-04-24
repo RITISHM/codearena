@@ -16,16 +16,17 @@ const updateUserById = async (Userid, data) => {
       lastName: data.lastname,
       dob: new Date(data.dob),
       region: data.region,
+      github: data.github,
     },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   );
   if (!user) throw new Error("unable to update");
   return user;
 };
 
 const deleteUser = async (Userid, password) => {
-
-  if (!(await User.findById(Userid).then(user => user.verifyPassword(password)))) throw new Error("invalidPassword");
+  if (!(await User.findById(Userid).then((user) => user.verifyPassword(password))))
+    throw new Error("invalidPassword");
 
   const user = await User.findByIdAndDelete(Userid);
   return user;

@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
         username: data.username || '',
         email: data.email || '',
         dob: data.dob,
+        role: data.role || 'user',
         winRate: data.matches ? `${Math.round((data.win / data.matches) * 100)}%` : '0%',
         location: data.region || 'Earth',
         joinDate: data.joined ? new Date(data.joined).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently'
@@ -53,9 +54,12 @@ export const AuthProvider = ({ children }) => {
                 const userRes = await fetch('/api/user/me');
                 if (userRes.ok) {
                     const userData = await userRes.json();
-                    setUser(formatUser(userData));
+                    const formattedUser = formatUser(userData);
+                    setUser(formattedUser);
+                    // Return role so the login page can redirect admin to /admin
+                    return { success: true, role: formattedUser.role };
                 }
-                return { success: true };
+                return { success: true, role: 'user' };
             }
             return { success: false, error: data.error || 'Invalid credentials' };
         } catch (err) {
@@ -128,13 +132,16 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const isAdmin = user?.role === 'admin';
+
     const value = {
         user,
         loading,
         login,
         signup,
         logout,
-        updateProfile
+        updateProfile,
+        isAdmin
     };
 
     return (

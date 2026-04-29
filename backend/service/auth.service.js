@@ -5,6 +5,7 @@ import User from "../models/users.js";
 const login = async (data) => {
   const user = await User.findOne({ email: data.email });
   if (!user) throw new Error("Invalid credentials");
+  if (user.status === "banned") throw new Error("Account is banned");
   if (!(await user.verifyPassword(data.password)))
     throw new Error("Invalid credentials");
   const token = jwt.sign(
@@ -12,11 +13,11 @@ const login = async (data) => {
       email: user.email,
       userId: user._id,
       username: user.username,
+      role: user.role,
     },
     JWT_SECRET,
     { expiresIn: "7d" },
   );
-  console.log(JWT_SECRET);
   return token;
 };
 
@@ -31,11 +32,11 @@ const signup = async (data) => {
       email: user.email,
       userId: user._id,
       username: user.username,
+      role: user.role,
     },
     JWT_SECRET,
     { expiresIn: "7d" },
   );
-  console.log(JWT_SECRET);
   return { token, user };
 };
 

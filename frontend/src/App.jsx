@@ -8,8 +8,15 @@ import Arena from './pages/Arena';
 import Result from './pages/Result';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import MatchHistory from './pages/MatchHistory';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+import AdminLayout from './components/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminProblems from './pages/admin/AdminProblems';
+import AdminActivity from './pages/admin/AdminActivity';
 
 function App() {
   return (
@@ -38,13 +45,26 @@ function App() {
             <Route path="profile/:username" element={
               <ProtectedRoute><Profile /></ProtectedRoute>
             } />
+            <Route path="matches" element={
+              <ProtectedRoute><MatchHistory /></ProtectedRoute>
+            } />
 
             {/* Additional Features */}
             <Route path="leaderboard" element={<Leaderboard />} />
-
-            {/* Fallback path */}
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
+
+          {/* Admin Routes — separate layout, no main navbar */}
+          <Route path="/admin" element={
+            <AdminRoute><AdminLayout /></AdminRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="problems" element={<AdminProblems />} />
+            <Route path="activity" element={<AdminActivity />} />
+          </Route>
+
+          {/* Fallback path */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Code2, Trophy, User } from 'lucide-react';
+import { Code2, Trophy, User, Shield } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, isAdmin } = useAuth();
 
     const handleLogout = async () => {
         await logout();
@@ -36,6 +36,14 @@ export default function Navbar() {
                             <span className="text-sm text-gray-400">Welcome, </span>
                             <span className="text-sm font-bold text-primary ml-1">{user.username}</span>
                         </div>
+                        {isAdmin && (
+                            <Link to="/admin">
+                                <Button variant="ghost" size="sm" className="hidden sm:flex gap-2 text-amber-400 hover:text-amber-300">
+                                    <Shield className="w-4 h-4" />
+                                    Admin
+                                </Button>
+                            </Link>
+                        )}
                         <Link to="/leaderboard">
                             <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
                                 <Trophy className="w-4 h-4" />

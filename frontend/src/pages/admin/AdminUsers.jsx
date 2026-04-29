@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Filter, ChevronLeft, ChevronRight, Shield, ShieldOff,
@@ -117,7 +118,7 @@ export default function AdminUsers() {
                 setTotalPages(data.totalPages);
             }
         } catch (err) {
-            console.error(err);
+            toast.error('Failed to load users');
         } finally {
             setLoading(false);
         }
@@ -139,8 +140,13 @@ export default function AdminUsers() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role: newRole }),
             });
-            if (res.ok) fetchUsers();
-        } catch (err) { console.error(err); }
+            if (res.ok) {
+                toast.success(`Role updated to ${newRole}`);
+                fetchUsers();
+            } else {
+                toast.error('Failed to update role');
+            }
+        } catch (err) { toast.error('Network error'); }
     };
 
     const handleStatusToggle = async (userId, currentStatus) => {
@@ -151,8 +157,13 @@ export default function AdminUsers() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
             });
-            if (res.ok) fetchUsers();
-        } catch (err) { console.error(err); }
+            if (res.ok) {
+                toast.success(`User ${newStatus === 'banned' ? 'banned' : 'unbanned'} successfully`);
+                fetchUsers();
+            } else {
+                toast.error('Failed to update status');
+            }
+        } catch (err) { toast.error('Network error'); }
     };
 
     const handleDelete = (userId, username) => {
@@ -164,8 +175,13 @@ export default function AdminUsers() {
             onConfirm: async () => {
                 try {
                     const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-                    if (res.ok) fetchUsers();
-                } catch (err) { console.error(err); }
+                    if (res.ok) {
+                        toast.success('User deleted');
+                        fetchUsers();
+                    } else {
+                        toast.error('Failed to delete user');
+                    }
+                } catch (err) { toast.error('Network error'); }
                 setConfirmModal({ open: false });
             },
         });

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
@@ -56,13 +57,16 @@ export const AuthProvider = ({ children }) => {
                     const userData = await userRes.json();
                     const formattedUser = formatUser(userData);
                     setUser(formattedUser);
-                    // Return role so the login page can redirect admin to /admin
+                    toast.success(`Welcome back, ${formattedUser.username}!`);
                     return { success: true, role: formattedUser.role };
                 }
                 return { success: true, role: 'user' };
             }
-            return { success: false, error: data.error || 'Invalid credentials' };
+            const errMsg = data.error || 'Invalid credentials';
+            toast.error(errMsg);
+            return { success: false, error: errMsg };
         } catch (err) {
+            toast.error('Network error — check your connection');
             return { success: false, error: 'Network error' };
         }
     };
@@ -85,8 +89,6 @@ export const AuthProvider = ({ children }) => {
 
             const data = await res.json();
             if (res.ok) {
-                // The signup endpoint currently returns the user formatted in basic way.
-                // We fetch the full profile from /api/user/me after signup to be safe
                 const userRes = await fetch('/api/user/me');
                 if (userRes.ok) {
                     const userData = await userRes.json();
@@ -94,10 +96,14 @@ export const AuthProvider = ({ children }) => {
                 } else {
                     setUser(formatUser(data.user));
                 }
+                toast.success('Account created! Welcome to CodeArena 🎉');
                 return { success: true };
             }
-            return { success: false, error: data.error || 'Signup failed' };
+            const errMsg = data.error || 'Signup failed';
+            toast.error(errMsg);
+            return { success: false, error: errMsg };
         } catch (err) {
+            toast.error('Network error — check your connection');
             return { success: false, error: 'Network error' };
         }
     };
@@ -114,11 +120,14 @@ export const AuthProvider = ({ children }) => {
 
             if (res.ok) {
                 const data = await res.json();
-                setUser(formatUser(data)); 
+                setUser(formatUser(data));
+                toast.success('Profile updated successfully');
                 return { success: true };
             }
+            toast.error('Failed to update profile');
             return { success: false, error: 'Update failed' };
         } catch (err) {
+            toast.error('Network error');
             return { success: false, error: 'Network error' };
         }
     };
@@ -130,6 +139,7 @@ export const AuthProvider = ({ children }) => {
             console.error(err);
         }
         setUser(null);
+        toast.info('You have been logged out');
     };
 
     const isAdmin = user?.role === 'admin';

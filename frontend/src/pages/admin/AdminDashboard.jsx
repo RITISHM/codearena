@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import {
     Users, FileCode2, Swords, Send, TrendingUp, UserCheck,
@@ -145,6 +146,7 @@ export default function AdminDashboard() {
                 if (activityRes.ok) setRecentActivity(await activityRes.json());
             } catch (err) {
                 console.error('Dashboard fetch error:', err);
+                toast.error('Failed to load dashboard data');
             } finally {
                 setLoading(false);
             }

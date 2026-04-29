@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import {
     Activity, Users, Swords, Send, Clock, TrendingUp,
@@ -78,6 +79,7 @@ export default function AdminActivity() {
                 if (activityRes.ok) setRecentActivity(await activityRes.json());
             } catch (err) {
                 console.error(err);
+                toast.error('Failed to load activity data');
             } finally {
                 setLoading(false);
             }

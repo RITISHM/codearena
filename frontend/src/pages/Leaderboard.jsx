@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, Star, MapPin, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Card } from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +21,7 @@ export default function Leaderboard() {
                 }
             } catch (err) {
                 console.error('Failed to fetch leaderboard:', err);
+                toast.error('Failed to load leaderboard');
             } finally {
                 setLoading(false);
             }

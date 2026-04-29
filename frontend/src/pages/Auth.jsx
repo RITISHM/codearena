@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Code2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Code2, ArrowRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,6 @@ const COUNTRIES = [
 export default function Auth() {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({ username: '', email: '', password: '', firstName: '', lastName: '', region: '', dob: '' });
-    const [error, setError] = useState('');
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,7 +35,6 @@ export default function Auth() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
 
         let res;
         if (isLogin) {
@@ -46,15 +44,12 @@ export default function Auth() {
         }
 
         if (res.success) {
-            // If admin, redirect to admin panel
             if (res.role === 'admin') {
                 navigate('/admin', { replace: true });
             } else {
                 const from = location.state?.from?.pathname || '/dashboard';
                 navigate(from, { replace: true });
             }
-        } else {
-            setError(res.error);
         }
     };
 
@@ -91,14 +86,14 @@ export default function Auth() {
                 <Card className="p-8 backdrop-blur-xl bg-dark-panel/90 shadow-2xl shadow-primary/5">
                     <div className="flex gap-4 mb-6 p-1 bg-dark-bg rounded-lg">
                         <button
-                            onClick={() => { setIsLogin(true); setError(''); }}
+                            onClick={() => { setIsLogin(true); }}
                             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isLogin ? 'bg-dark-panel text-white shadow-sm glow-primary' : 'text-gray-400 hover:text-white'}`}
                             type="button"
                         >
                             Sign In
                         </button>
                         <button
-                            onClick={() => { setIsLogin(false); setError(''); }}
+                            onClick={() => { setIsLogin(false); }}
                             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isLogin ? 'bg-dark-panel text-white shadow-sm glow-primary' : 'text-gray-400 hover:text-white'}`}
                             type="button"
                         >
@@ -116,12 +111,7 @@ export default function Auth() {
                             onSubmit={handleSubmit}
                             className="space-y-4"
                         >
-                            {error && (
-                                <div className="p-3 bg-danger/10 border border-danger/30 rounded-lg flex items-center gap-2 text-danger text-sm">
-                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                    {error}
-                                </div>
-                            )}
+
 
                             {!isLogin && (
                                 <>

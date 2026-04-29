@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Plus, ChevronLeft, ChevronRight, Edit3, Trash2, X,
@@ -268,7 +269,7 @@ export default function AdminProblems() {
                 setTotal(data.total);
                 setTotalPages(data.totalPages);
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { toast.error('Failed to load problems'); }
         finally { setLoading(false); }
     }, [page, search, diffFilter]);
 
@@ -290,11 +291,14 @@ export default function AdminProblems() {
                 body: JSON.stringify(formData),
             });
             if (res.ok) {
+                toast.success(editingProblem ? 'Problem updated' : 'Problem created');
                 setFormOpen(false);
                 setEditingProblem(null);
                 fetchProblems();
+            } else {
+                toast.error('Failed to save problem');
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { toast.error('Network error'); }
     };
 
     const handleDelete = (id, title) => {
@@ -305,8 +309,13 @@ export default function AdminProblems() {
             onConfirm: async () => {
                 try {
                     const res = await fetch(`/api/admin/problems/${id}`, { method: 'DELETE' });
-                    if (res.ok) fetchProblems();
-                } catch (err) { console.error(err); }
+                    if (res.ok) {
+                        toast.success('Problem deleted');
+                        fetchProblems();
+                    } else {
+                        toast.error('Failed to delete problem');
+                    }
+                } catch (err) { toast.error('Network error'); }
                 setConfirmModal({ open: false });
             },
         });

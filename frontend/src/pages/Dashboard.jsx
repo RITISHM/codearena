@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PlusCircle, LogIn, Swords, Trophy, Activity, Hash, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -37,6 +38,7 @@ export default function Dashboard() {
                 }
             } catch (err) {
                 console.error('Failed to fetch matches:', err);
+                toast.error('Failed to load recent matches');
             } finally {
                 setMatchesLoading(false);
             }

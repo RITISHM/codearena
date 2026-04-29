@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { User, Activity, MapPin, Calendar, GitBranch, Edit2, Check, X, Mail, Trash2, Trophy, Swords, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -79,6 +80,7 @@ export default function Profile() {
                     }
                 } catch (err) {
                     console.error("Failed to fetch activity", err);
+                    toast.error('Failed to load activity data');
                 }
             };
             fetchActivity();
@@ -98,6 +100,7 @@ export default function Profile() {
                     }
                 } catch (err) {
                     console.error('Failed to fetch matches:', err);
+                    toast.error('Failed to load matches');
                 } finally {
                     setMatchesLoading(false);
                 }
@@ -133,13 +136,16 @@ export default function Profile() {
             const data = await res.json();
             
             if (res.ok) {
+                toast.success('Account deleted successfully');
                 await logout();
                 navigate('/');
             } else {
                 setDeleteError(data.error || 'Failed to delete account');
+                toast.error(data.error || 'Failed to delete account');
             }
         } catch (err) {
             setDeleteError('Network error');
+            toast.error('Network error');
         }
     };
 

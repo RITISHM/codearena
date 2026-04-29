@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, ChevronLeft, ChevronRight, Swords, ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,7 @@ export default function MatchHistory() {
             }
         } catch (err) {
             console.error('Failed to fetch matches:', err);
+            toast.error('Failed to load match history');
         } finally {
             setLoading(false);
         }

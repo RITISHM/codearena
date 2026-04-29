@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   region: String,
   github: String,
   level: { type: String, enum: ["beginner", "intermediate", "advanced"] },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
 });
 
 userSchema.pre("save", async function () {

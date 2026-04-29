@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema({
   github: String,
   level: { type: String, enum: ["beginner", "intermediate", "advanced"] },
   role: { type: String, enum: ["user", "admin"], default: "user" },
+  status: { type: String, enum: ["active", "banned"], default: "active" },
 });
 
 userSchema.pre("save", async function () {

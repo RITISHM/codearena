@@ -20,14 +20,14 @@ export default function Auth() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const { login, signup, user } = useAuth();
+    const { login, signup, user, isAdmin } = useAuth();
 
     // If user is already logged in, redirect them away
     useEffect(() => {
         if (user) {
-            navigate('/dashboard', { replace: true });
+            navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, isAdmin, navigate]);
 
     // If user came via /signup explicitly initially
     useEffect(() => {
@@ -46,9 +46,13 @@ export default function Auth() {
         }
 
         if (res.success) {
-            // Navigate to intended page, or default to dashboard
-            const from = location.state?.from?.pathname || '/dashboard';
-            navigate(from, { replace: true });
+            // If admin, redirect to admin panel
+            if (res.role === 'admin') {
+                navigate('/admin', { replace: true });
+            } else {
+                const from = location.state?.from?.pathname || '/dashboard';
+                navigate(from, { replace: true });
+            }
         } else {
             setError(res.error);
         }

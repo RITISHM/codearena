@@ -1,15 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PlusCircle, LogIn, Swords, Trophy, Activity, Hash, ArrowRight } from 'lucide-react';
+import { PlusCircle, LogIn, Swords, Trophy, Activity, Hash, ArrowRight, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+
+// Format date to relative time string
+function timeAgo(dateStr) {
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 30) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString();
+}
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [roomCode, setRoomCode] = useState('');
+    const [recentMatches, setRecentMatches] = useState([]);
+    const [matchesLoading, setMatchesLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchMatches = async () => {
+            try {
+                const res = await fetch('/api/user/me/matches?limit=5');
+                if (res.ok) {
+                    const data = await res.json();
+                    setRecentMatches(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch matches:', err);
+            } finally {
+                setMatchesLoading(false);
+            }
+        };
+        fetchMatches();
+    }, []);
 
     const handleJoinRoom = (e) => {
         e.preventDefault();
@@ -22,12 +55,6 @@ export default function Dashboard() {
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         navigate(`/lobby/${code}`);
     };
-
-    const recentMatches = [
-        { id: 1, opponent: 'ByteRider', outcome: 'Win', score: '300', date: '2 hrs ago' },
-        { id: 2, opponent: 'NullPointer', outcome: 'Loss', score: '150', date: 'Yesterday' },
-        { id: 3, opponent: 'SyntaxError', outcome: 'Win', score: '280', date: '2 days ago' },
-    ];
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -138,7 +165,7 @@ export default function Dashboard() {
                                 <Trophy className="w-5 h-5 text-primary" />
                                 Recent Matches
                             </h3>
-                            <Button variant="ghost" size="sm" onClick={() => navigate('/profile/me')}>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/matches')}>
                                 View All
                             </Button>
                         </div>
@@ -154,29 +181,45 @@ export default function Dashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-dark-border">
-                                    {recentMatches.map((match) => (
-                                        <tr key={match.id} className="hover:bg-dark-bg/50 transition-colors group">
-                                            <td className="py-4 flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-xs border border-dark-border">
-                                                    {match.opponent.charAt(0)}
-                                                </div>
-                                                <span className="font-mono text-gray-200">{match.opponent}</span>
-                                            </td>
-                                            <td className="py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                          ${match.outcome === 'Win' ? 'bg-success/10 text-success border-success/20 glow-success' : 'bg-danger/10 text-danger border-danger/20'}
-                        `}>
-                                                    {match.outcome}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 text-right font-mono text-gray-300">
-                                                {match.outcome === 'Win' ? '+' : '-'}{match.score}
-                                            </td>
-                                            <td className="py-4 text-right text-gray-500 text-sm">
-                                                {match.date}
+                                    {matchesLoading ? (
+                                        <tr>
+                                            <td colSpan="4" className="py-10 text-center">
+                                                <Loader2 className="w-5 h-5 text-primary animate-spin mx-auto" />
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : recentMatches.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="py-10 text-center text-gray-600">
+                                                No matches yet. Start a battle!
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        recentMatches.map((match) => (
+                                            <tr key={match.id} className="hover:bg-dark-bg/50 transition-colors group">
+                                                <td className="py-4 flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-xs border border-dark-border">
+                                                        {match.opponent?.charAt(0)?.toUpperCase()}
+                                                    </div>
+                                                    <span className="font-mono text-gray-200">{match.opponent}</span>
+                                                </td>
+                                                <td className="py-4">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                                        ${match.outcome === 'Win' ? 'bg-success/10 text-success border-success/20 glow-success'
+                                                        : match.outcome === 'Loss' ? 'bg-danger/10 text-danger border-danger/20'
+                                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
+                                                    `}>
+                                                        {match.outcome}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 text-right font-mono text-gray-300">
+                                                    {match.outcome === 'Win' ? '+' : match.outcome === 'Loss' ? '-' : ''}{match.score}
+                                                </td>
+                                                <td className="py-4 text-right text-gray-500 text-sm">
+                                                    {timeAgo(match.date)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>

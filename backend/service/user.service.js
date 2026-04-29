@@ -1,5 +1,6 @@
 import User from "../models/users.js";
 import Activity from "../models/activity.js";
+import Match from "../models/matches.js";
 
 const getUserById = async (Userid) => {
   const user = await User.findOne({ _id: Userid });
@@ -42,4 +43,65 @@ const getActivity = async (userId, year) => {
   });
   return activity;
 };
-export default { getUserById, updateUserById, deleteUser, getActivity };
+
+const getRecentMatches = async (userId, limit = 10) => {
+  const matches = await Match.find({
+    $or: [{ "players.player1": userId }, { "players.player2": userId }],
+    status: { $in: ["completed", "aborted"] },
+  })
+    .sort({ createdAt: -1 })
+    .limit(Number(limit))
+    .populate("players.player1", "username")
+    .populate("players.player2", "username");
+
+  return matches.map((m) => {
+    const isPlayer1 = m.players.player1._id.toString() === userId.toString();
+    const opponent = isPlayer1 ? m.players.player2 : m.players.player1;
+    const myPoints = isPlayer1 ? m.points.player1 : m.points.player2;
+    const isWinner = m.winner && m.winner.toString() === userId.toString();
+    return {
+      id: m._id,
+      opponent: opponent?.username || "Unknown",
+      outcome: m.status === "aborted" ? "Aborted" : isWinner ? "Win" : "Loss",
+      score: myPoints,
+      date: m.createdAt,
+    };
+  });
+};
+
+const getPaginatedMatches = async (userId, page = 1, limit = 10) => {
+  const query = {
+    $or: [{ "players.player1": userId }, { "players.player2": userId }],
+  };
+  const skip = (page - 1) * limit;
+  const [matches, total] = await Promise.all([
+    Match.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .populate("players.player1", "username")
+      .populate("players.player2", "username"),
+    Match.countDocuments(query),
+  ]);
+
+  const formatted = matches.map((m) => {
+    const isPlayer1 = m.players.player1._id.toString() === userId.toString();
+    const opponent = isPlayer1 ? m.players.player2 : m.players.player1;
+    const myPoints = isPlayer1 ? m.points.player1 : m.points.player2;
+    const opponentPoints = isPlayer1 ? m.points.player2 : m.points.player1;
+    const isWinner = m.winner && m.winner.toString() === userId.toString();
+    return {
+      id: m._id,
+      opponent: opponent?.username || "Unknown",
+      outcome: m.status === "aborted" ? "Aborted" : m.status === "ongoing" ? "Ongoing" : isWinner ? "Win" : "Loss",
+      score: myPoints,
+      opponentScore: opponentPoints,
+      status: m.status,
+      date: m.createdAt,
+    };
+  });
+
+  return { matches: formatted, total, page: Number(page), totalPages: Math.ceil(total / limit) };
+};
+
+export default { getUserById, updateUserById, deleteUser, getActivity, getRecentMatches, getPaginatedMatches };

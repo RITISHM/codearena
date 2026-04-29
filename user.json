@@ -1,0 +1,48 @@
+{
+    "users": [
+        {
+            "_id": {
+                "$oid": "69f259f5fd58008ee3b00989"
+            },
+            "username": "pratham",
+            "email": "pratham1587.becse24@chitkara.edu.in",
+            "password": "$2b$10$Cnggm.svx7aLeyAHbcSYwON0TaBKYlJ63jjodkmNoDqPFkWV7eCZe",
+            "firstName": "Pratham",
+            "lastName": "Garg",
+            "dob": {
+                "$date": "2006-05-02T00:00:00.000Z"
+            },
+            "win": 0,
+            "matches": 0,
+            "region": "India",
+            "role": "user",
+            "status": "active",
+            "joined": {
+                "$date": "2026-04-29T19:20:21.241Z"
+            },
+            "__v": 0
+        },
+        {
+            "_id": {
+                "$oid": "69eaf927bacf0a8f83d5903d"
+            },
+            "username": "rutvi",
+            "email": "rutvi1625.becse24@chitkara.edu.in",
+            "password": "$2b$10$n6Y2J2CVkOWE7bG0Yn.9K.vtCUb8/oKP4TIo5aCNTrqad.c/cSFE6",
+            "firstName": "Rutvi",
+            "lastName": "Juneja",
+            "dob": {
+                "$date": "2005-09-01T00:00:00.000Z"
+            },
+            "win": 0,
+            "matches": 0,
+            "region": "India",
+            "joined": {
+                "$date": "2026-04-24T05:01:27.105Z"
+            },
+            "__v": 0,
+            "github": "rutvijuneja",
+            "role": "user"
+        }
+    ]
+}

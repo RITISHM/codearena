@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Activity, MapPin, Calendar, GitBranch, Edit2, Check, X, Mail, Trash2 } from 'lucide-react';
+import { User, Activity, MapPin, Calendar, GitBranch, Edit2, Check, X, Mail, Trash2, Trophy, Swords, Loader2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,8 @@ export default function Profile() {
     const { user, updateProfile, logout } = useAuth();
     const [activities, setActivities] = useState([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [recentMatches, setRecentMatches] = useState([]);
+    const [matchesLoading, setMatchesLoading] = useState(true);
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
@@ -82,6 +84,29 @@ export default function Profile() {
             fetchActivity();
         }
     }, [isOwnProfile, selectedYear]);
+
+    // Fetch recent matches
+    useEffect(() => {
+        if (isOwnProfile) {
+            const fetchMatches = async () => {
+                setMatchesLoading(true);
+                try {
+                    const res = await fetch('/api/user/me/matches?limit=5');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setRecentMatches(data);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch matches:', err);
+                } finally {
+                    setMatchesLoading(false);
+                }
+            };
+            fetchMatches();
+        } else {
+            setMatchesLoading(false);
+        }
+    }, [isOwnProfile]);
 
     const handleSave = () => {
         if (isOwnProfile && updateProfile) {
@@ -329,6 +354,67 @@ export default function Profile() {
                                 })()}
                             </div>
                         </div>
+                    </Card>
+
+                    {/* Recent Matches */}
+                    <Card className="p-6 mt-6">
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <Trophy className="w-5 h-5 text-primary" />
+                                Recent Matches
+                            </h3>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/matches')}>
+                                View All
+                            </Button>
+                        </div>
+
+                        {matchesLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                            </div>
+                        ) : recentMatches.length === 0 ? (
+                            <div className="text-center py-8">
+                                <Swords className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">No matches played yet</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {recentMatches.map((match) => (
+                                    <div key={match.id} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.02] transition-colors">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-xs border border-dark-border shrink-0">
+                                            {match.opponent?.charAt(0)?.toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <span className="font-mono text-white text-sm font-medium">{match.opponent}</span>
+                                            <p className="text-xs text-gray-600">
+                                                {(() => {
+                                                    const seconds = Math.floor((Date.now() - new Date(match.date).getTime()) / 1000);
+                                                    if (seconds < 60) return 'Just now';
+                                                    const minutes = Math.floor(seconds / 60);
+                                                    if (minutes < 60) return `${minutes}m ago`;
+                                                    const hours = Math.floor(minutes / 60);
+                                                    if (hours < 24) return `${hours}h ago`;
+                                                    const days = Math.floor(hours / 24);
+                                                    if (days === 1) return 'Yesterday';
+                                                    if (days < 30) return `${days}d ago`;
+                                                    return new Date(match.date).toLocaleDateString();
+                                                })()}
+                                            </p>
+                                        </div>
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                            ${match.outcome === 'Win' ? 'bg-success/10 text-success border-success/20'
+                                            : match.outcome === 'Loss' ? 'bg-danger/10 text-danger border-danger/20'
+                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
+                                        `}>
+                                            {match.outcome}
+                                        </span>
+                                        <span className={`font-mono text-sm font-bold ${match.outcome === 'Win' ? 'text-success' : match.outcome === 'Loss' ? 'text-danger' : 'text-gray-400'}`}>
+                                            {match.outcome === 'Win' ? '+' : match.outcome === 'Loss' ? '-' : ''}{match.score}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </Card>
                 </div>
             </div>

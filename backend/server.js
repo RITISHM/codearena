@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import userRoutes from "./routes/user.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cookieParser());
 
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
+app.use("/admin", adminRoutes);
 app.get("/health", (req, res) => {
   res.json({
     status: "Healthy",

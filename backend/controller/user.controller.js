@@ -39,3 +39,23 @@ export const getActivity = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getRecentMatches = async (req, res) => {
+  try {
+    const limit = req.query.limit || 10;
+    const matches = await userService.getRecentMatches(req.user.userId, limit);
+    res.status(200).json(matches);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getPaginatedMatches = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const result = await userService.getPaginatedMatches(req.user.userId, page, limit);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

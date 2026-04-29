@@ -1,6 +1,7 @@
 import User from "../models/users.js";
 import Activity from "../models/activity.js";
 import Match from "../models/matches.js";
+import Submission from "../models/submissions.js";
 
 const getUserById = async (Userid) => {
   const user = await User.findOne({ _id: Userid });
@@ -104,4 +105,62 @@ const getPaginatedMatches = async (userId, page = 1, limit = 10) => {
   return { matches: formatted, total, page: Number(page), totalPages: Math.ceil(total / limit) };
 };
 
-export default { getUserById, updateUserById, deleteUser, getActivity, getRecentMatches, getPaginatedMatches };
+const getMatchDetail = async (matchId, userId) => {
+  const match = await Match.findById(matchId)
+    .populate("players.player1", "username firstName lastName")
+    .populate("players.player2", "username firstName lastName")
+    .populate("problemsId", "title problemId difficulty problemSlug")
+    .populate("winner", "username");
+
+  if (!match) throw new Error("Match not found");
+
+  // Make sure the requesting user is a participant
+  const isPlayer1 = match.players.player1._id.toString() === userId.toString();
+  const isPlayer2 = match.players.player2._id.toString() === userId.toString();
+  if (!isPlayer1 && !isPlayer2) throw new Error("Not authorized to view this match");
+
+  // Get all submissions for this match
+  const submissions = await Submission.find({ matchId })
+    .populate("userId", "username")
+    .populate("problemId", "title problemId difficulty")
+    .sort({ createdAt: -1 });
+
+  return {
+    id: match._id,
+    status: match.status,
+    players: {
+      player1: {
+        ...match.players.player1.toObject(),
+        points: match.points.player1,
+        isYou: isPlayer1,
+      },
+      player2: {
+        ...match.players.player2.toObject(),
+        points: match.points.player2,
+        isYou: isPlayer2,
+      },
+    },
+    problems: match.problemsId,
+    winner: match.winner,
+    leftBy: match.left_by,
+    startedAt: match.startedAt,
+    createdAt: match.createdAt,
+    submissions: submissions.map((s) => ({
+      id: s._id,
+      user: s.userId?.username || "Unknown",
+      userId: s.userId?._id,
+      problem: s.problemId?.title || "Unknown",
+      problemId: s.problemId?.problemId,
+      difficulty: s.problemId?.difficulty,
+      language: s.language,
+      status: s.status,
+      executionTime: s.executionTime,
+      memoryUsed: s.memoryUsed,
+      testcase: s.testcase,
+      code: s.code,
+      createdAt: s.createdAt,
+    })),
+  };
+};
+
+export default { getUserById, updateUserById, deleteUser, getActivity, getRecentMatches, getPaginatedMatches, getMatchDetail };

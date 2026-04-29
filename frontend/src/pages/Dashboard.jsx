@@ -195,7 +195,7 @@ export default function Dashboard() {
                                         </tr>
                                     ) : (
                                         recentMatches.map((match) => (
-                                            <tr key={match.id} className="hover:bg-dark-bg/50 transition-colors group">
+                                            <tr key={match.id} className="hover:bg-dark-bg/50 transition-colors group cursor-pointer" onClick={() => navigate(`/matches/${match.id}`)}>
                                                 <td className="py-4 flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-xs border border-dark-border">
                                                         {match.opponent?.charAt(0)?.toUpperCase()}

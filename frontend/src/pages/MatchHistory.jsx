@@ -103,7 +103,8 @@ export default function MatchHistory() {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.04 }}
-                                className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors"
+                                className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                                onClick={() => navigate(`/matches/${match.id}`)}
                             >
                                 {/* Opponent avatar */}
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-sm border border-dark-border shrink-0">

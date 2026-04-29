@@ -380,7 +380,7 @@ export default function Profile() {
                         ) : (
                             <div className="space-y-2">
                                 {recentMatches.map((match) => (
-                                    <div key={match.id} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.02] transition-colors">
+                                    <div key={match.id} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => navigate(`/matches/${match.id}`)}>
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center font-mono text-xs border border-dark-border shrink-0">
                                             {match.opponent?.charAt(0)?.toUpperCase()}
                                         </div>

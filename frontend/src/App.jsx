@@ -9,6 +9,7 @@ import Result from './pages/Result';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import MatchHistory from './pages/MatchHistory';
+import MatchDetail from './pages/MatchDetail';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -47,6 +48,9 @@ function App() {
             } />
             <Route path="matches" element={
               <ProtectedRoute><MatchHistory /></ProtectedRoute>
+            } />
+            <Route path="matches/:matchId" element={
+              <ProtectedRoute><MatchDetail /></ProtectedRoute>
             } />
 
             {/* Additional Features */}

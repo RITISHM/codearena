@@ -59,3 +59,13 @@ export const getPaginatedMatches = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getMatchDetail = async (req, res) => {
+  try {
+    const match = await userService.getMatchDetail(req.params.matchId, req.user.userId);
+    res.status(200).json(match);
+  } catch (err) {
+    const status = err.message === "Match not found" ? 404 : err.message === "Not authorized to view this match" ? 403 : 500;
+    res.status(status).json({ error: err.message });
+  }
+};
